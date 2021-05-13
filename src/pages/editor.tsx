@@ -26,7 +26,7 @@ export default function Editor() {
   const [uploadedFiles, setUploadFiles] = useState([])
   const onDrop = useCallback((acceptedFiles) => {
     // Do something with the files
-    setUploadFiles(uploadedFiles)
+    setUploadFiles(uploadedFiles.concat(acceptedFiles))
   }, [])
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 

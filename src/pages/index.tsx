@@ -7,8 +7,8 @@ export default function Home() {
   return (
     <HomeLayout>
       <Hero
-        title="Guess Who - Make your custom deck today!"
-        subtitle="Create a personalized Guess Who deck within minutes that you can play with friends and family."
+        title="Guess a whoDat!"
+        subtitle="Create a personalized 'Guess Who' deck within minutes that you can play with friends and family."
         image="https://source.unsplash.com/collection/404339/800x600"
         ctaText="Create your deck now"
         ctaLink="/editor"

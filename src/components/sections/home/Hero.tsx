@@ -9,7 +9,10 @@ import {
   Heading,
   Stack,
   Text,
+  Spacer,
+  Center,
 } from '@chakra-ui/react'
+import GuessWho from '../../ui/GuessWho'
 
 export default function Hero({
   title,
@@ -77,9 +80,18 @@ export default function Hero({
           No credit card required.
         </Text>
       </Stack>
+      <Spacer />
       <Box w={{ base: '80%', sm: '60%', md: '50%' }} mb={{ base: 12, md: 0 }}>
         {/* TODO: Make this change every X secs */}
-        <Image src={image} size="100%" rounded="1rem" shadow="2xl" />
+        {/* <Image src={image} /> */}
+        <Box width={500} rounded="1rem" shadow="2xl" p="10">
+          <Center>
+            <GuessWho
+              guessImage="https://seetyah.s3.amazonaws.com/dvh.png"
+              actualImage="https://ca.slack-edge.com/T0CA1SGCU-U0CA8MY8N-53b022d8447e-512"
+            />
+          </Center>
+        </Box>
       </Box>
     </Flex>
   )

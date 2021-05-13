@@ -80,7 +80,7 @@ const Header = (props) => {
           <MenuItem to="/how">How It works </MenuItem>
           <MenuItem to="/faetures">Features </MenuItem>
           <MenuItem to="/pricing">Pricing </MenuItem>
-          <MenuItem to="/signup" isLast>
+          <MenuItem to="/editor" isLast>
             <Button
               size="sm"
               rounded="md"
@@ -95,7 +95,7 @@ const Header = (props) => {
                 ],
               }}
             >
-              Create Account
+              Create Deck
             </Button>
           </MenuItem>
         </Flex>
