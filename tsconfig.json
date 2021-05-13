@@ -19,7 +19,8 @@
     "**/*.ts",
     "**/*.tsx",
     "src/components/ui/Logo.tsx",
-    "src/components/layouts/HomeLayout.tsx"
+    "src/components/layouts/HomeLayout.tsx",
+    "src/components/sections/home/Header.js"
   ],
   "exclude": ["node_modules"]
 }
