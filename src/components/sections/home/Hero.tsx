@@ -86,7 +86,7 @@ export default function Hero({
       <Box w={{ base: '80%', sm: '60%', md: '50%' }} mb={{ base: 12, md: 0 }}>
         {/* TODO: Make this change every X secs */}
         {/* <Image src={image} /> */}
-        <Box width={500} rounded="1rem" shadow="2xl" p="10">
+        <Box width={[300, 500]} rounded="1rem" shadow="2xl" p="10">
           <Center>
             <GuessWho
               guessImage="https://seetyah.s3.amazonaws.com/dvh.png"
