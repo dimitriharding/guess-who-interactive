@@ -26,7 +26,7 @@ export default function Editor() {
   const [uploadedFiles, setUploadFiles] = useState([])
   const onDrop = useCallback((acceptedFiles) => {
     // Do something with the files
-    setUploadFiles(uploadedFiles.concat(acceptedFiles))
+    setUploadFiles(acceptedFiles)
   }, [])
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
@@ -36,16 +36,17 @@ export default function Editor() {
         {uploadedFiles.map((file, index) => (
           <div key={file.name}>
             <ImageCard
+              file={file}
               id={index}
               name={file.name}
               type={file.type}
               url={URL.createObjectURL(file)}
               size={file.size}
               onRemove={(id) => {
-                const newlist = uploadedFiles.filter(
+                const newList = uploadedFiles.filter(
                   (file, index) => id !== index
                 )
-                setUploadFiles(newlist)
+                setUploadFiles(newList)
               }}
             />
           </div>
@@ -81,11 +82,12 @@ export default function Editor() {
               <Box p={5}>
                 <Divider />
               </Box>
-
-              <GuessWho
-                guessImage="https://seetyah.s3.amazonaws.com/dvh.png"
-                actualImage="https://ca.slack-edge.com/T0CA1SGCU-U0CA8MY8N-53b022d8447e-512"
-              />
+              <Box>
+                <GuessWho
+                  guessImage="https://seetyah.s3.amazonaws.com/dvh.png"
+                  actualImage="https://ca.slack-edge.com/T0CA1SGCU-U0CA8MY8N-53b022d8447e-512"
+                />
+              </Box>
             </Box>
           </GridItem>
           <GridItem mt={[5, null, 0]} colSpan={{ md: 2 }}>
@@ -214,14 +216,16 @@ export default function Editor() {
                 bg={useColorModeValue('gray.50', 'gray.900')}
                 textAlign="right"
               >
-                <Button
-                  type="submit"
-                  colorScheme="brand"
-                  _focus={{ shadow: '' }}
-                  fontWeight="md"
-                >
-                  Save
-                </Button>
+                {uploadedFiles.length !== 0 && (
+                  <Button
+                    type="submit"
+                    colorScheme="red"
+                    _focus={{ shadow: '' }}
+                    fontWeight="md"
+                  >
+                    Create my deck
+                  </Button>
+                )}
               </Box>
             </chakra.form>
           </GridItem>

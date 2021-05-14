@@ -91,6 +91,7 @@ export default function Hero({
             <GuessWho
               guessImage="https://seetyah.s3.amazonaws.com/dvh.png"
               actualImage="https://ca.slack-edge.com/T0CA1SGCU-U0CA8MY8N-53b022d8447e-512"
+              position={0.2}
             />
           </Center>
         </Box>
