@@ -10,7 +10,7 @@ const Carousel = ({ slides }) => {
     w: 'auto',
     mt: '-22px',
     p: '16px',
-    color: 'white',
+    color: useColorModeValue('black', 'white'),
     fontWeight: 'bold',
     fontSize: '18px',
     transition: '0.6s ease',
@@ -18,7 +18,7 @@ const Carousel = ({ slides }) => {
     userSelect: 'none',
     _hover: {
       opacity: 0.8,
-      bg: 'black',
+      bg: useColorModeValue('gray.200', 'black'),
     },
   }
 
@@ -39,13 +39,7 @@ const Carousel = ({ slides }) => {
   }
 
   return (
-    <Flex
-      w="full"
-      bg={useColorModeValue('gray.200', 'gray.600')}
-      p={10}
-      alignItems="center"
-      justifyContent="center"
-    >
+    <Flex w="full" p={10} alignItems="center" justifyContent="center">
       <Flex w="full" overflow="hidden" pos="relative">
         <Flex h="80vh" w="full" {...carouselStyle}>
           {slides.map((slide, sid) => (
@@ -59,7 +53,7 @@ const Carousel = ({ slides }) => {
               >
                 {sid + 1} / {slidesCount}
               </Text>
-              <Center>
+              <Center h="100%">
                 <Box w={[150, 500]}>
                   <GuessWho
                     guessImage={slide.guessImage}
