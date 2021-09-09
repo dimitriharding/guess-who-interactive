@@ -2,6 +2,7 @@ import React from 'react'
 
 import Hero from '../components/sections/home/Hero'
 import HomeLayout from '../components/layouts/HomeLayout'
+import Features from '../components/sections/home/Features'
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
         ctaText="Create your deck now"
         ctaLink="/editor"
       />
+      <Features />
     </HomeLayout>
   )
 }

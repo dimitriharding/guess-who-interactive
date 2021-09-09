@@ -36,11 +36,11 @@ export async function getStaticProps() {
           options: [
             {
               name: 'Ned Stark',
-              type: false,
+              answer: false,
             },
             {
               name: 'Robert Baratheon',
-              type: false,
+              answer: false,
             },
             {
               name: 'Tyrion Lannister',

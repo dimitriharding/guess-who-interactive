@@ -1,6 +1,8 @@
 import Head from 'next/head'
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
 import type { AppProps } from 'next/app'
+import FontFace from '../components/font-face'
+import './style.css'
 
 import customTheme from '../chakra-ui/customTheme'
 
@@ -15,6 +17,7 @@ function App({ Component, pageProps }: AppProps) {
       <ChakraProvider theme={customTheme}>
         <Component {...pageProps} />
       </ChakraProvider>
+      <FontFace />
     </>
   )
 }
