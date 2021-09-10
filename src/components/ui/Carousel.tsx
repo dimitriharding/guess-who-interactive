@@ -1,10 +1,77 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Flex, useColorModeValue, Text, Center } from '@chakra-ui/react'
 import GuessWho from './GuessWho'
-import Confetti from 'react-dom-confetti'
+import ReactCanvasConfetti from 'react-canvas-confetti'
+
+const canvasStyles = {
+  position: 'fixed',
+  pointerEvents: 'none',
+  width: '100%',
+  height: '100%',
+  top: 0,
+  left: 0,
+}
 
 const Carousel = ({ slides }) => {
   const [confetti, setConfetti] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [position, setPosition] = useState(0)
+  const [animationInstance, setAnimationInstance] = useState(null)
+
+  const slidesCount = slides.length
+
+  const prevSlide = () => {
+    setPosition(0)
+    setCurrentSlide((s) => (s === 0 ? slidesCount - 1 : s - 1))
+  }
+  const nextSlide = () => {
+    setPosition(0)
+    setCurrentSlide((s) => (s === slidesCount - 1 ? 0 : s + 1))
+  }
+
+  const makeShot = (particleRatio, opts) => {
+    if (animationInstance) {
+      setAnimationInstance({
+        ...opts,
+        origin: { y: 0.7 },
+        particleCount: Math.floor(200 * particleRatio),
+      })
+    }
+  }
+
+  const fire = () => {
+    makeShot(0.25, {
+      spread: 26,
+      startVelocity: 55,
+    })
+
+    makeShot(0.2, {
+      spread: 60,
+    })
+
+    makeShot(0.35, {
+      spread: 100,
+      decay: 0.91,
+      scalar: 0.8,
+    })
+
+    makeShot(0.1, {
+      spread: 120,
+      startVelocity: 25,
+      decay: 0.92,
+      scalar: 1.2,
+    })
+
+    makeShot(0.1, {
+      spread: 120,
+      startVelocity: 45,
+    })
+  }
+
+  const getInstance = (instance) => {
+    setAnimationInstance(instance)
+  }
+
   const arrowStyles = {
     cursor: 'pointer',
     pos: 'absolute',
@@ -24,27 +91,12 @@ const Carousel = ({ slides }) => {
     },
   }
 
-  const config = {
-    angle: 90,
-    spread: 360,
-    startVelocity: 40,
-    elementCount: 70,
-    dragFriction: 0.12,
-    duration: 3000,
-    stagger: 3,
-    width: '10px',
-    height: '10px',
-    perspective: '500px',
-    colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'],
-  }
-
   const handleSelection = (option) => {
-    setConfetti(option.answer)
+    if (option.answer) {
+      setPosition(100)
+      fire()
+    }
   }
-
-  const ConfettiWrapper = (props) => (
-    <div style={{ position: 'absolute', left: '50%', top: '50%' }} {...props} />
-  )
 
   const Wrapper = (props) => <div style={{ position: 'relative' }} {...props} />
 
@@ -87,15 +139,10 @@ const Carousel = ({ slides }) => {
     )
   }
 
-  const [currentSlide, setCurrentSlide] = useState(0)
-
-  const slidesCount = slides.length
-
-  const prevSlide = () => {
-    setCurrentSlide((s) => (s === 0 ? slidesCount - 1 : s - 1))
-  }
-  const nextSlide = () => {
-    setCurrentSlide((s) => (s === slidesCount - 1 ? 0 : s + 1))
+  const Confetti = () => {
+    return (
+      <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
+    )
   }
 
   const carouselStyle = {
@@ -129,7 +176,7 @@ const Carousel = ({ slides }) => {
                       <GuessWho
                         guessImage={slide.guessImage}
                         actualImage={slide.actualImage}
-                        position={0}
+                        position={position}
                       />
                     </Box>
                   </Center>
@@ -145,9 +192,7 @@ const Carousel = ({ slides }) => {
           </Flex>
         </Flex>
         <Choices />
-        <ConfettiWrapper>
-          <Confetti active={true} config={config} />
-        </ConfettiWrapper>
+        <Confetti />
       </Wrapper>
     </Box>
   )

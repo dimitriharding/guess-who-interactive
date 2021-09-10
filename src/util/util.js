@@ -1,3 +1,23 @@
+import { uuid } from 'uuidv4'
+
+export function apiRequest(path, method = 'GET', data) {
+  return fetch(`/api/${path}`, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': `${process.env.NEXT_PUBLIC_API_KEY}`,
+    },
+    body: data ? JSON.stringify(data) : undefined,
+  }).then((response) => response.json())
+}
+
+// Create an Error with custom message and code
+export function CustomError(code, message) {
+  const error = new Error(message)
+  error.code = code
+  return error
+}
+
 export const fileSize = (size) => {
   var i = Math.floor(Math.log(size) / Math.log(1024))
   return (
@@ -47,4 +67,9 @@ export const imageMaskUrl = async (file) => {
       resolve(URL.createObjectURL(blob))
     })
   })
+}
+
+export const createUserId = () => {
+  const userId = uuid()
+  return userId
 }

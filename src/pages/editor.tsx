@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -21,6 +21,8 @@ import {
 import GuessWho from '../components/ui/GuessWho'
 import { useDropzone } from 'react-dropzone'
 import ImageCard from '../components/ui/ImageCard'
+import { createUserId } from '../util/util'
+import { createAnonUser } from '../util/API/user'
 
 export default function Editor() {
   const [uploadedFiles, setUploadFiles] = useState([])
@@ -54,6 +56,27 @@ export default function Editor() {
       </>
     )
   }
+
+  useEffect(() => {
+    // check if user exist, if not create in database
+    const userId = window.localStorage.getItem('gw:UserId')
+    if (userId) {
+      //  user exist
+      console.log('user existing')
+    } else {
+      // create a user in the database
+      const userId = createUserId()
+      console.log({ userId })
+      createAnonUser(userId)
+        .then(() => {
+          window.localStorage.setItem('gw:UserId', userId)
+        })
+        .catch((error) => {
+          console.log({ error })
+        })
+    }
+  }, [])
+
   return (
     <Box bg={useColorModeValue('gray.50', 'inherit')} p={10}>
       <Box>
