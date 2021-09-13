@@ -22,3 +22,19 @@ export const createImages = (images: Images[]) => {
   // bulk create of images for guesswho deck
   return supabase.from<Images>('images').insert([...images])
 }
+
+export const getDeckInfo = (deckId) => {
+  return supabase
+    .from('decks')
+    .select(
+      `
+  name, 
+  description, 
+  guess_options (
+    options,
+    original_image,
+    masked_image
+  )`
+    )
+    .eq('id', deckId)
+}

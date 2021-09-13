@@ -96,8 +96,9 @@ export const removeBackground = (file) => {
     body: formData,
   }).then(async (response) => {
     const fileBlob = await response.blob()
-    const new_file = new File([fileBlob], file.name, {
-      type: file.type,
+    const file_name_png = file.name.split('.')[0] + '.png'
+    const new_file = new File([fileBlob], file_name_png, {
+      type: 'image/png',
     })
     return new_file
   })
