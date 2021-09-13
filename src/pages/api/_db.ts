@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Users, Images } from '../../types/supabase'
+import { Users, Images, Decks, Guess_options } from '../../types/supabase'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -8,6 +8,14 @@ const supabase = createClient(
 
 export const createAnonUser = (uuid) => {
   return supabase.from<Users>('users').insert([{ id: uuid }])
+}
+
+export const createDeck = (data) => {
+  return supabase.from<Decks>('decks').insert([data])
+}
+
+export const createGuessOptions = (data) => {
+  return supabase.from<Guess_options>('guess_options').insert([...data])
 }
 
 export const createImages = (images: Images[]) => {

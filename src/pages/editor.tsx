@@ -17,22 +17,42 @@ import {
   Icon,
   VisuallyHidden,
   Divider,
+  Input,
+  RadioGroup,
+  Radio,
 } from '@chakra-ui/react'
 import GuessWho from '../components/ui/GuessWho'
 import { useDropzone } from 'react-dropzone'
 import ImageCard from '../components/ui/ImageCard'
-import { createUserId } from '../util/util'
+import {
+  createUserId,
+  removeBackground,
+  removeBackgroundTest,
+  creatDeckId,
+  uploadImage,
+} from '../util/util'
 import { createAnonUser } from '../util/API/user'
+import { createDeck } from '../util/API/deck'
+import { createGuessOptions } from '../util/API/guess-options'
 
 export default function Editor() {
+  const [removingBackground, setRemovingBackground] = useState(false)
   const [uploadedFiles, setUploadFiles] = useState([])
+  const [currentUserId, setCurrentUserId] = useState('')
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [guessOptions, setGuessOptions] = useState({})
   const onDrop = useCallback((acceptedFiles) => {
     // Do something with the files
     setUploadFiles(acceptedFiles)
   }, [])
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: 'image/png,image/jpeg',
+  })
 
   const ImageList = () => {
+    useEffect(() => {}, [])
     return (
       <>
         {uploadedFiles.map((file, index) => (
@@ -51,10 +71,64 @@ export default function Editor() {
                 setUploadFiles(newList)
               }}
             />
+            <br />
+            <Input
+              onInput={(event) => {
+                const data = event.currentTarget.value
+                const object = {
+                  [file.name]: {
+                    options: data,
+                  },
+                }
+                setGuessOptions({ ...guessOptions, ...object })
+              }}
+              placeholder="Enter 4 options separated by a comma (,)"
+            />
           </div>
         ))}
       </>
     )
+  }
+
+  const saveImages = async () => {
+    setRemovingBackground(true)
+    const [deck] = await createDeck({
+      owner: currentUserId,
+      name,
+      description,
+    })
+    const { id: deckId } = deck
+    const originalImageUploadResponse = await Promise.all(
+      uploadedFiles.map((file) => uploadImage({ file, deckId }))
+    )
+    const removeBackgroundResponse = await Promise.all(
+      uploadedFiles.map(removeBackground)
+    )
+    const removeBackgroundImageUploadResponse = await Promise.all(
+      removeBackgroundResponse.map((file) =>
+        uploadImage({ file, deckId, noBg: true })
+      )
+    )
+
+    const finalGuessOptions = uploadedFiles.map((file, index) => {
+      const option = {
+        deck_id: deckId,
+        original_image: originalImageUploadResponse[index],
+        masked_image: removeBackgroundImageUploadResponse[index],
+        options: {
+          data: guessOptions[file.name].options.split(',').map((option) => {
+            return {
+              name: option,
+              answer: guessOptions[file.name].answer === option,
+            }
+          }),
+        },
+      }
+      return option
+    })
+    const response = await createGuessOptions(finalGuessOptions)
+    console.log({ response })
+    setRemovingBackground(false)
   }
 
   useEffect(() => {
@@ -62,14 +136,15 @@ export default function Editor() {
     const userId = window.localStorage.getItem('gw:UserId')
     if (userId) {
       //  user exist
+      setCurrentUserId(userId)
       console.log('user existing')
     } else {
       // create a user in the database
       const userId = createUserId()
-      console.log({ userId })
       createAnonUser(userId)
         .then(() => {
           window.localStorage.setItem('gw:UserId', userId)
+          setCurrentUserId(userId)
         })
         .catch((error) => {
           console.log({ error })
@@ -127,28 +202,49 @@ export default function Editor() {
                 spacing={6}
                 p={{ sm: 6 }}
               >
-                <div>
-                  <FormControl id="email" mt={1}>
-                    <FormLabel
-                      fontSize="sm"
-                      fontWeight="md"
-                      color={useColorModeValue('gray.700', 'gray.50')}
-                    >
-                      About
-                    </FormLabel>
-                    <Textarea
-                      placeholder="This is the best Guess Who deck ever!"
-                      mt={1}
-                      rows={3}
-                      shadow="sm"
-                      focusBorderColor="brand.400"
-                      fontSize={{ sm: 'sm' }}
-                    />
-                    <FormHelperText>
-                      Brief description about your deck.
-                    </FormHelperText>
-                  </FormControl>
-                </div>
+                <FormControl id="name" mt={1}>
+                  <FormLabel
+                    fontSize="sm"
+                    fontWeight="md"
+                    color={useColorModeValue('gray.700', 'gray.50')}
+                  >
+                    Name
+                  </FormLabel>
+                  <Input
+                    placeholder="My Deck"
+                    mt={1}
+                    shadow="sm"
+                    focusBorderColor="brand.400"
+                    fontSize={{ sm: 'sm' }}
+                    onInput={(event) => setName(event.currentTarget.value)}
+                  />
+                  <FormHelperText>
+                    Easy identifiable name for your deck
+                  </FormHelperText>
+                </FormControl>
+                <FormControl id="about" mt={1}>
+                  <FormLabel
+                    fontSize="sm"
+                    fontWeight="md"
+                    color={useColorModeValue('gray.700', 'gray.50')}
+                  >
+                    About
+                  </FormLabel>
+                  <Textarea
+                    placeholder="This is the best Guess Who deck ever!"
+                    mt={1}
+                    rows={3}
+                    shadow="sm"
+                    focusBorderColor="brand.400"
+                    fontSize={{ sm: 'sm' }}
+                    onInput={(event) =>
+                      setDescription(event.currentTarget.value)
+                    }
+                  />
+                  <FormHelperText>
+                    Brief description about your deck.
+                  </FormHelperText>
+                </FormControl>
 
                 <FormControl>
                   <FormLabel
@@ -156,7 +252,7 @@ export default function Editor() {
                     fontWeight="md"
                     color={useColorModeValue('gray.700', 'gray.50')}
                   >
-                    Add your images
+                    {`Add your images (${uploadedFiles.length}/10)`}
                   </FormLabel>
                   <div {...getRootProps()}>
                     <VisuallyHidden>
@@ -231,20 +327,78 @@ export default function Editor() {
                     </Flex>
                   </div>
                 </FormControl>
-                <ImageList />
+                {uploadedFiles.map((file, index) => {
+                  const options = guessOptions[file.name]
+                    ? guessOptions[file.name].options.split(',')
+                    : []
+                  return (
+                    <div key={file.name}>
+                      <ImageCard
+                        file={file}
+                        id={index}
+                        name={file.name}
+                        type={file.type}
+                        url={URL.createObjectURL(file)}
+                        size={file.size}
+                        onRemove={(id) => {
+                          const newList = uploadedFiles.filter(
+                            (file, index) => id !== index
+                          )
+                          setUploadFiles(newList)
+                        }}
+                      />
+                      <br />
+                      <Input
+                        onInput={(event) => {
+                          const data = event.currentTarget.value
+                          const object = {
+                            [file.name]: {
+                              options: data,
+                            },
+                          }
+                          setGuessOptions({ ...guessOptions, ...object })
+                        }}
+                        placeholder="Enter 4 options separated by a comma (,)"
+                      />
+                      <br />
+                      <br />
+                      <RadioGroup
+                        onChange={(value) => {
+                          const object = guessOptions[file.name]
+                          const currentOption = {
+                            [file.name]: {
+                              ...object,
+                              answer: value,
+                            },
+                          }
+                          setGuessOptions({ ...guessOptions, ...currentOption })
+                        }}
+                      >
+                        <Stack direction={['column', 'row']}>
+                          {options.map((option) => (
+                            <Radio key={option} value={option}>
+                              {option}
+                            </Radio>
+                          ))}
+                        </Stack>
+                      </RadioGroup>
+                    </div>
+                  )
+                })}
               </Stack>
               <Box
                 px={{ base: 4, sm: 6 }}
                 py={3}
-                bg={useColorModeValue('gray.50', 'gray.900')}
+                bg={useColorModeValue('gray.50', 'gray.800')}
                 textAlign="right"
               >
                 {uploadedFiles.length !== 0 && (
                   <Button
-                    type="submit"
                     colorScheme="red"
                     _focus={{ shadow: '' }}
                     fontWeight="md"
+                    onClick={saveImages}
+                    isLoading={removingBackground}
                   >
                     Create my deck
                   </Button>

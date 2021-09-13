@@ -5,17 +5,15 @@ export interface Users {
 }
 
 export interface Decks {
-  id: number /* primary key */
   created_at?: string
   updated_at?: string
   owner?: string /* foreign key to users.id */
   description?: string // type unknown;
   public?: boolean
-  users?: Users
+  name?: string
 }
 
 export interface Guess_options {
-  id: number /* primary key */
   created_at?: string
   updated_at?: string
   deck_id?: number /* foreign key to decks.id */

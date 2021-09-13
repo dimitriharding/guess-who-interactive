@@ -1,4 +1,10 @@
 import { uuid } from 'uuidv4'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON
+)
 
 export function apiRequest(path, method = 'GET', data) {
   return fetch(`/api/${path}`, {
@@ -72,4 +78,52 @@ export const imageMaskUrl = async (file) => {
 export const createUserId = () => {
   const userId = uuid()
   return userId
+}
+
+export const creatDeckId = () => {
+  const deckId = uuid()
+  return deckId
+}
+
+export const removeBackground = (file) => {
+  const formData = new FormData()
+  formData.append('image_file', file)
+  return fetch(process.env.NEXT_PUBLIC_PHOTOROOM_URL, {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.NEXT_PUBLIC_PHOTOROOM_API_KEY,
+    },
+    body: formData,
+  }).then(async (response) => {
+    const fileBlob = await response.blob()
+    const new_file = new File([fileBlob], file.name, {
+      type: file.type,
+    })
+    return new_file
+  })
+}
+
+export const removeBackgroundTest = (file) => {
+  const blob = new Blob([file], { type: file.type })
+  const newFile = new File([blob], file.name, {
+    type: file.type,
+  })
+  return newFile
+}
+
+export const uploadImage = async ({ file, deckId, noBg = false }) => {
+  const { data, error } = await supabase.storage
+    .from('guess-who-images')
+    .upload(`public/${deckId}/${noBg ? 'no-bg-' : ''}${file.name}`, file, {
+      cacheControl: '3600',
+      upsert: false,
+    })
+
+  if (data) {
+    return `https://qsqbzqshutqqrdjoplay.supabase.in/storage/v1/object/public/${data.Key}`
+  }
+
+  if (error) {
+    return ''
+  }
 }
