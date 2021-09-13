@@ -10,7 +10,7 @@ const canvasStyles = {
   height: '100%',
   top: 0,
   left: 0,
-}
+} as any
 
 const Carousel = ({ slides }) => {
   const [confetti, setConfetti] = useState(false)
@@ -89,7 +89,7 @@ const Carousel = ({ slides }) => {
       opacity: 0.8,
       bg: useColorModeValue('gray.200', 'black'),
     },
-  }
+  } as any
 
   const handleSelection = (option) => {
     if (option.answer) {
