@@ -62,6 +62,11 @@ export default function ImageCard({
             </Flex>
           </Flex>
         </Box>
+        <CloseButton
+          onClick={() => {
+            onRemove(name)
+          }}
+        />
       </Flex>
       {/* <Flex
         maxW="md"

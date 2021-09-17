@@ -24,6 +24,8 @@ class Document extends NextDocument {
             type="font/woff2"
             crossOrigin="anonymous"
           />
+          <script src="https://js.stripe.com/v3/"></script>
+          <script src="https://flurly.com/flurly-checkout.js"></script>
         </Head>
         <body>
           <ColorModeScript />

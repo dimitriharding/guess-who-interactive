@@ -20,17 +20,16 @@ import {
   Input,
   RadioGroup,
   Radio,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  CloseButton,
 } from '@chakra-ui/react'
 import GuessWho from '../components/ui/GuessWho'
 import { useDropzone } from 'react-dropzone'
 import ImageCard from '../components/ui/ImageCard'
-import {
-  createUserId,
-  removeBackground,
-  removeBackgroundTest,
-  creatDeckId,
-  uploadImage,
-} from '../util/util'
+import { createUserId, removeBackground, uploadImage } from '../util/util'
 import { createAnonUser } from '../util/API/user'
 import { createDeck } from '../util/API/deck'
 import { createGuessOptions } from '../util/API/guess-options'
@@ -42,53 +41,28 @@ export default function Editor() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [guessOptions, setGuessOptions] = useState({})
-  const onDrop = useCallback((acceptedFiles) => {
-    // Do something with the files
-    setUploadFiles(acceptedFiles)
-  }, [])
+  const [showAlert, setShowAlert] = useState(false)
+  const [completed, setCompleted] = useState(false)
+  const [opacityState, setOpacityState] = useState('')
+  const onDrop = useCallback(
+    (acceptedFiles) => {
+      // Do something with the files
+      const arrSet = [...uploadedFiles, ...acceptedFiles]
+      if (arrSet[10] !== undefined) {
+        setShowAlert(true)
+        const newFiles = arrSet.splice(0, 10)
+        setUploadFiles([...newFiles])
+      } else {
+        setShowAlert(false)
+        setUploadFiles([...arrSet])
+      }
+    },
+    [uploadedFiles]
+  )
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: 'image/png,image/jpeg',
   })
-
-  const ImageList = () => {
-    useEffect(() => {}, [])
-    return (
-      <>
-        {uploadedFiles.map((file, index) => (
-          <div key={file.name}>
-            <ImageCard
-              file={file}
-              id={index}
-              name={file.name}
-              type={file.type}
-              url={URL.createObjectURL(file)}
-              size={file.size}
-              onRemove={(id) => {
-                const newList = uploadedFiles.filter(
-                  (file, index) => id !== index
-                )
-                setUploadFiles(newList)
-              }}
-            />
-            <br />
-            <Input
-              onInput={(event) => {
-                const data = event.currentTarget.value
-                const object = {
-                  [file.name]: {
-                    options: data,
-                  },
-                }
-                setGuessOptions({ ...guessOptions, ...object })
-              }}
-              placeholder="Enter 4 options separated by a comma (,)"
-            />
-          </div>
-        ))}
-      </>
-    )
-  }
 
   const saveImages = async () => {
     setRemovingBackground(true)
@@ -129,6 +103,16 @@ export default function Editor() {
     const response = await createGuessOptions(finalGuessOptions)
     console.log({ response })
     setRemovingBackground(false)
+  }
+
+  const toggleOpacity = (action) => {
+    if (action === 'out') {
+      setOpacityState('100%')
+    }
+
+    if (action === 'over') {
+      setOpacityState('80%')
+    }
   }
 
   useEffect(() => {
@@ -245,7 +229,38 @@ export default function Editor() {
                     Brief description about your deck.
                   </FormHelperText>
                 </FormControl>
-
+                {showAlert && (
+                  <>
+                    <Alert status="error">
+                      <AlertIcon />
+                      <AlertTitle mr={2}>
+                        Your selection was more than 10!
+                      </AlertTitle>
+                      <AlertDescription>
+                        If you would like to create a deck with more than 10
+                        images, you can buy credit to increase the limit.
+                      </AlertDescription>
+                      <CloseButton position="absolute" right="8px" top="8px" />
+                    </Alert>
+                    <a
+                      id="checkout-button"
+                      href="https://flurly.com/p/whodat-credit-purchase-15"
+                      onMouseOver={() => toggleOpacity('over')}
+                      onMouseOut={() => toggleOpacity('out')}
+                      style={{
+                        opacity: opacityState,
+                      }}
+                    >
+                      <img
+                        src="https://flurly.com/buy-now.svg"
+                        style={{
+                          height: '3em',
+                          backgroundColor: 'white',
+                        }}
+                      />
+                    </a>
+                  </>
+                )}
                 <FormControl>
                   <FormLabel
                     fontSize="sm"
@@ -340,11 +355,11 @@ export default function Editor() {
                         type={file.type}
                         url={URL.createObjectURL(file)}
                         size={file.size}
-                        onRemove={(id) => {
+                        onRemove={(fileName) => {
                           const newList = uploadedFiles.filter(
-                            (file, index) => id !== index
+                            (file) => fileName !== file.name
                           )
-                          setUploadFiles(newList)
+                          setUploadFiles([...newList])
                         }}
                       />
                       <br />
@@ -382,6 +397,8 @@ export default function Editor() {
                           ))}
                         </Stack>
                       </RadioGroup>
+                      <br />
+                      <Divider />
                     </div>
                   )
                 })}
