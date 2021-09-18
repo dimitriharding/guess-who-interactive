@@ -10,6 +10,14 @@ export const createAnonUser = (uuid) => {
   return supabase.from<Users>('users').insert([{ id: uuid }])
 }
 
+export const getUser = (userId) => {
+  return supabase.from<Users>('users').select(`id, credit`).eq('id', userId)
+}
+
+export const addCredit = (data) => {
+  return supabase.from<Users>('users')
+}
+
 export const createDeck = (data) => {
   return supabase.from<Decks>('decks').insert([data])
 }
