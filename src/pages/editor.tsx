@@ -36,6 +36,7 @@ import { createGuessOptions } from '../util/API/guess-options'
 import Result from '../components/ui/Result'
 import LeftPanel from '../components/Editor/LeftPanel'
 import SharePanel from '../components/Editor/SharePanel'
+import { title } from 'process'
 
 export default function Editor() {
   const [removingBackground, setRemovingBackground] = useState(false)
@@ -45,6 +46,7 @@ export default function Editor() {
   const [description, setDescription] = useState('')
   const [guessOptions, setGuessOptions] = useState({})
   const [showAlert, setShowAlert] = useState(false)
+  const [errorAlert, setErrorAlert] = useState(true)
   const [completed, setCompleted] = useState(false)
   const [opacityState, setOpacityState] = useState('')
   const [deckData, setDeckData] = useState(null)
@@ -70,42 +72,52 @@ export default function Editor() {
 
   const saveImages = async () => {
     setRemovingBackground(true)
-    const [deck] = await createDeck({
-      owner: currentUserId,
-      name,
-      description,
-    })
-    setDeckData(deck)
-    const { id: deckId } = deck
-    const originalImageUploadResponse = await Promise.all(
-      uploadedFiles.map((file) => uploadImage({ file, deckId }))
-    )
-    const removeBackgroundResponse = await Promise.all(
-      uploadedFiles.map(removeBackground)
-    )
-    const removeBackgroundImageUploadResponse = await Promise.all(
-      removeBackgroundResponse.map((file) =>
-        uploadImage({ file, deckId, noBg: true })
+    try {
+      const [deck] = await createDeck({
+        owner: currentUserId,
+        name,
+        description,
+      })
+      setDeckData(deck)
+      const { id: deckId } = deck
+      const originalImageUploadResponse = await Promise.all(
+        uploadedFiles.map((file) => uploadImage({ file, deckId }))
       )
-    )
+      const removeBackgroundResponse = await Promise.all(
+        uploadedFiles.map(removeBackground)
+      )
+      const removeBackgroundImageUploadResponse = await Promise.all(
+        removeBackgroundResponse.map((file) =>
+          uploadImage({ file, deckId, noBg: true })
+        )
+      )
 
-    const finalGuessOptions = uploadedFiles.map((file, index) => {
-      const option = {
-        deck_id: deckId,
-        original_image: originalImageUploadResponse[index],
-        masked_image: removeBackgroundImageUploadResponse[index],
-        options: {
-          data: guessOptions[file.name].options.split(',').map((option) => {
-            return {
-              name: option,
-              answer: guessOptions[file.name].answer === option,
-            }
-          }),
-        },
-      }
-      return option
-    })
-    const response = await createGuessOptions(finalGuessOptions)
+      const finalGuessOptions = uploadedFiles.map((file, index) => {
+        const option = {
+          deck_id: deckId,
+          original_image: originalImageUploadResponse[index],
+          masked_image: removeBackgroundImageUploadResponse[index],
+          options: {
+            data: guessOptions[file.name].options.split(',').map((option) => {
+              return {
+                name: option,
+                answer: guessOptions[file.name].answer === option,
+              }
+            }),
+          },
+        }
+        return option
+      })
+      localStorage.setItem(
+        'finalGuessOptions',
+        JSON.stringify(finalGuessOptions)
+      )
+      const response = await createGuessOptions(finalGuessOptions)
+      setCompleted(true)
+    } catch (error) {
+      setErrorAlert(true)
+      setCompleted(false)
+    }
     setRemovingBackground(false)
   }
 
@@ -125,7 +137,6 @@ export default function Editor() {
     if (userId) {
       //  user exist
       setCurrentUserId(userId)
-      console.log('user existing')
     } else {
       // create a user in the database
       const userId = createUserId()
@@ -166,7 +177,7 @@ export default function Editor() {
                   spacing={6}
                   p={{ sm: 6 }}
                 >
-                  <FormControl id="name" mt={1}>
+                  <FormControl id="name" mt={1} isRequired>
                     <FormLabel
                       fontSize="sm"
                       fontWeight="md"
@@ -186,7 +197,7 @@ export default function Editor() {
                       Easy identifiable name for your deck
                     </FormHelperText>
                   </FormControl>
-                  <FormControl id="about" mt={1}>
+                  <FormControl id="about" mt={1} isRequired>
                     <FormLabel
                       fontSize="sm"
                       fontWeight="md"
@@ -212,7 +223,7 @@ export default function Editor() {
                   {showAlert && (
                     <>
                       <Alert status="error">
-                        <AlertIcon />
+                        <AlertIcon onClick={() => setShowAlert(false)} />
                         <AlertTitle mr={2}>
                           Your selection was more than 10!
                         </AlertTitle>
@@ -245,7 +256,7 @@ export default function Editor() {
                       </a>
                     </>
                   )}
-                  <FormControl>
+                  <FormControl isRequired>
                     <FormLabel
                       fontSize="sm"
                       fontWeight="md"
@@ -335,20 +346,6 @@ export default function Editor() {
                       : []
                     return (
                       <div key={file.name}>
-                        <ImageCard
-                          file={file}
-                          id={index}
-                          name={file.name}
-                          type={file.type}
-                          url={URL.createObjectURL(file)}
-                          size={file.size}
-                          onRemove={(fileName) => {
-                            const newList = uploadedFiles.filter(
-                              (file) => fileName !== file.name
-                            )
-                            setUploadFiles([...newList])
-                          }}
-                        />
                         <br />
                         <Input
                           onInput={(event) => {
@@ -362,7 +359,6 @@ export default function Editor() {
                           }}
                           placeholder="Enter 4 options separated by a comma (,)"
                         />
-                        <br />
                         <br />
                         <RadioGroup
                           onChange={(value) => {
@@ -388,6 +384,20 @@ export default function Editor() {
                           </Stack>
                         </RadioGroup>
                         <br />
+                        <ImageCard
+                          file={file}
+                          id={index}
+                          name={file.name}
+                          type={file.type}
+                          url={URL.createObjectURL(file)}
+                          size={file.size}
+                          onRemove={(id) => {
+                            const newList = uploadedFiles.filter(
+                              (file, index) => index !== id
+                            )
+                            setUploadFiles([...newList])
+                          }}
+                        />
                         <Divider />
                       </div>
                     )
@@ -400,15 +410,23 @@ export default function Editor() {
                   textAlign="right"
                 >
                   {uploadedFiles.length !== 0 && (
-                    <Button
-                      colorScheme="red"
-                      _focus={{ shadow: '' }}
-                      fontWeight="md"
-                      onClick={saveImages}
-                      isLoading={removingBackground}
-                    >
-                      Create my deck
-                    </Button>
+                    <FormControl>
+                      <Button
+                        colorScheme="red"
+                        _focus={{ shadow: '' }}
+                        fontWeight="md"
+                        onClick={saveImages}
+                        isLoading={removingBackground}
+                        disabled={title && description ? false : true}
+                      >
+                        Create my deck
+                      </Button>
+                      <FormHelperText>
+                        {title && description
+                          ? ''
+                          : 'Ensure that your deck have a title and about before creating.'}
+                      </FormHelperText>
+                    </FormControl>
                   )}
                 </Box>
               </chakra.form>
@@ -437,7 +455,12 @@ export default function Editor() {
                   status="success"
                 />
                 <Box mt="5">Share Options</Box>
-                <SharePanel shareUrl={`https://whodat.name/deck`} />
+                <SharePanel
+                  shareUrl={`https://whodat.name/deck/${
+                    deckData ? deckData.id : ''
+                  }`}
+                  title={`whoDat deck: ${title} \n\n ${description}`}
+                />
               </Center>
             )}
           </GridItem>
