@@ -1,24 +1,9 @@
 import React from 'react'
-import {
-  Box,
-  chakra,
-  Flex,
-  useColorModeValue,
-  Image,
-  Button,
-} from '@chakra-ui/react'
+import { Box, chakra, Flex, useColorModeValue, Image } from '@chakra-ui/react'
 import { DeleteIcon } from '@chakra-ui/icons'
 import { fileSize } from '../../util/util'
 
-export default function ImageCard({
-  url,
-  name,
-  type,
-  size,
-  onRemove,
-  id,
-  file,
-}) {
+export default function ImageCard({ url, name, size, onRemove, id }) {
   return (
     <Flex
       direction={['column', 'row']}

@@ -54,9 +54,9 @@ export default function Editor() {
     (acceptedFiles) => {
       // Do something with the files
       const arrSet = [...uploadedFiles, ...acceptedFiles]
-      if (arrSet[10] !== undefined) {
+      if (arrSet[5] !== undefined) {
         setShowAlert(true)
-        const newFiles = arrSet.splice(0, 10)
+        const newFiles = arrSet.splice(0, 5)
         setUploadFiles([...newFiles])
       } else {
         setShowAlert(false)
@@ -129,6 +129,17 @@ export default function Editor() {
     if (action === 'over') {
       setOpacityState('80%')
     }
+  }
+
+  const hasAnswers = () => {
+    const optionKeys = Object.keys(guessOptions)
+    const optionAnswers = optionKeys.filter(
+      (key) =>
+        guessOptions[key]?.answer &&
+        guessOptions[key]?.options?.split(',')?.length === 4
+    )
+    console.log({ optionAnswers })
+    return uploadedFiles.length === optionAnswers.length
   }
 
   useEffect(() => {
@@ -262,7 +273,7 @@ export default function Editor() {
                       fontWeight="md"
                       color={useColorModeValue('gray.700', 'gray.50')}
                     >
-                      {`Add your images (${uploadedFiles.length}/10)`}
+                      {`Add your images (${uploadedFiles.length}/5)`}
                     </FormLabel>
                     <div {...getRootProps()}>
                       <VisuallyHidden>
@@ -341,24 +352,41 @@ export default function Editor() {
                     </div>
                   </FormControl>
                   {uploadedFiles.map((file, index) => {
-                    const options = guessOptions[file.name]
+                    let options = guessOptions[file.name]
                       ? guessOptions[file.name].options.split(',')
                       : []
+                    options = options.splice(0, 4)
                     return (
-                      <div key={file.name}>
+                      <FormControl key={file.name}>
+                        <ImageCard
+                          id={index}
+                          name={file.name}
+                          url={URL.createObjectURL(file)}
+                          size={file.size}
+                          onRemove={(id) => {
+                            const newList = uploadedFiles.filter(
+                              (_, index) => index !== id
+                            )
+                            setUploadFiles([...newList])
+                          }}
+                        />
                         <br />
                         <Input
                           onInput={(event) => {
                             const data = event.currentTarget.value
-                            const object = {
-                              [file.name]: {
-                                options: data,
-                              },
+                            const currentNumberOfOptions = data.split(',')
+                            if (currentNumberOfOptions.length < 5) {
+                              const object = {
+                                [file.name]: {
+                                  options: data,
+                                },
+                              }
+                              setGuessOptions({ ...guessOptions, ...object })
                             }
-                            setGuessOptions({ ...guessOptions, ...object })
                           }}
-                          placeholder="Enter 4 options separated by a comma (,)"
+                          placeholder="John Doe, Mary Jane ..."
                         />
+                        <br />
                         <br />
                         <RadioGroup
                           onChange={(value) => {
@@ -383,23 +411,13 @@ export default function Editor() {
                             ))}
                           </Stack>
                         </RadioGroup>
-                        <br />
-                        <ImageCard
-                          file={file}
-                          id={index}
-                          name={file.name}
-                          type={file.type}
-                          url={URL.createObjectURL(file)}
-                          size={file.size}
-                          onRemove={(id) => {
-                            const newList = uploadedFiles.filter(
-                              (file, index) => index !== id
-                            )
-                            setUploadFiles([...newList])
-                          }}
-                        />
-                        <Divider />
-                      </div>
+                        <FormHelperText>
+                          {
+                            'Enter 4 names separated by a comma (,) and select the name that matches the image.'
+                          }
+                        </FormHelperText>
+                        <Divider mt={5} />
+                      </FormControl>
                     )
                   })}
                 </Stack>
@@ -412,19 +430,21 @@ export default function Editor() {
                   {uploadedFiles.length !== 0 && (
                     <FormControl>
                       <Button
-                        colorScheme="red"
+                        colorScheme="teal"
                         _focus={{ shadow: '' }}
                         fontWeight="md"
                         onClick={saveImages}
                         isLoading={removingBackground}
-                        disabled={title && description ? false : true}
+                        disabled={
+                          title && description && hasAnswers() ? false : true
+                        }
                       >
                         Create my deck
                       </Button>
                       <FormHelperText>
-                        {title && description
+                        {title && description && hasAnswers()
                           ? ''
-                          : 'Ensure that your deck have a title and about before creating.'}
+                          : 'Ensure that your deck have a title, about and each image has 4 options with an answer before creating.'}
                       </FormHelperText>
                     </FormControl>
                   )}
