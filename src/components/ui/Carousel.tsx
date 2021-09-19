@@ -1,22 +1,37 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Flex, useColorModeValue, Text, Center } from '@chakra-ui/react'
 import GuessWho from './GuessWho'
-import ReactCanvasConfetti from 'react-canvas-confetti'
+import Confetti from 'react-dom-confetti'
 
-const canvasStyles = {
-  position: 'fixed',
-  pointerEvents: 'none',
-  width: '100%',
-  height: '100%',
-  top: 0,
-  left: 0,
+const config = {
+  angle: 90,
+  spread: 360,
+  startVelocity: 40,
+  elementCount: 70,
+  dragFriction: 0.12,
+  duration: 3000,
+  stagger: 3,
+  width: '10px',
+  height: '10px',
+  perspective: '500px',
+  colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'],
 } as any
 
+const ConfettiWrapper = (props) => (
+  <div
+    style={{
+      position: 'absolute',
+      top: '50%',
+      right: '50%',
+    }}
+    {...props}
+  />
+)
+
 const Carousel = ({ slides }) => {
-  const [confetti, setConfetti] = useState(false)
+  const [fireConfetti, setFireConfetti] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [position, setPosition] = useState(0)
-  const [animationInstance, setAnimationInstance] = useState(null)
 
   const slidesCount = slides.length
 
@@ -27,49 +42,6 @@ const Carousel = ({ slides }) => {
   const nextSlide = () => {
     setPosition(0)
     setCurrentSlide((s) => (s === slidesCount - 1 ? 0 : s + 1))
-  }
-
-  const makeShot = (particleRatio, opts) => {
-    if (animationInstance) {
-      setAnimationInstance({
-        ...opts,
-        origin: { y: 0.7 },
-        particleCount: Math.floor(200 * particleRatio),
-      })
-    }
-  }
-
-  const fire = () => {
-    makeShot(0.25, {
-      spread: 26,
-      startVelocity: 55,
-    })
-
-    makeShot(0.2, {
-      spread: 60,
-    })
-
-    makeShot(0.35, {
-      spread: 100,
-      decay: 0.91,
-      scalar: 0.8,
-    })
-
-    makeShot(0.1, {
-      spread: 120,
-      startVelocity: 25,
-      decay: 0.92,
-      scalar: 1.2,
-    })
-
-    makeShot(0.1, {
-      spread: 120,
-      startVelocity: 45,
-    })
-  }
-
-  const getInstance = (instance) => {
-    setAnimationInstance(instance)
   }
 
   const arrowStyles = {
@@ -94,54 +66,76 @@ const Carousel = ({ slides }) => {
   const handleSelection = (option) => {
     if (option.answer) {
       setPosition(100)
-      fire()
+      setFireConfetti(true)
+      setTimeout(() => setFireConfetti(false), 3000)
     }
   }
 
   const Wrapper = (props) => <div style={{ position: 'relative' }} {...props} />
+
+  const shuffle = (array) => {
+    let currentIndex = array.length,
+      randomIndex
+
+    // While there remain elements to shuffle...
+    while (currentIndex != 0) {
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex)
+      currentIndex--
+
+      // And swap it with the current element.
+      ;[array[currentIndex], array[randomIndex]] = [
+        array[randomIndex],
+        array[currentIndex],
+      ]
+    }
+
+    return array
+  }
 
   const Choices = () => {
     return (
       <Flex w="full" p={10} alignItems="center" justifyContent="center">
         {slides?.map((slide, sid) => {
           if (currentSlide === sid) {
+            const options = [
+              <button
+                key="choice-1"
+                onClick={() => handleSelection(slide.options[0])}
+                className="game-button"
+              >
+                {slide.options[0].name}
+              </button>,
+              <button
+                key="choice-2"
+                onClick={() => handleSelection(slide.options[1])}
+                className="game-button orange"
+              >
+                {slide.options[1].name}
+              </button>,
+              <button
+                key="choice-3"
+                onClick={() => handleSelection(slide.options[2])}
+                className="game-button red"
+              >
+                {slide.options[2].name}
+              </button>,
+              <button
+                key="choice-4"
+                onClick={() => handleSelection(slide.options[3])}
+                className="game-button green"
+              >
+                {slide.options[3].name}
+              </button>,
+            ]
             return (
-              <>
-                <button
-                  onClick={() => handleSelection(slide.options[0])}
-                  className="game-button"
-                >
-                  {slide.options[0].name}
-                </button>
-                <button
-                  onClick={() => handleSelection(slide.options[1])}
-                  className="game-button orange"
-                >
-                  {slide.options[1].name}
-                </button>
-                <button
-                  onClick={() => handleSelection(slide.options[2])}
-                  className="game-button red"
-                >
-                  {slide.options[2].name}
-                </button>
-                <button
-                  onClick={() => handleSelection(slide.options[3])}
-                  className="game-button green"
-                >
-                  {slide.options[3].name}
-                </button>
-              </>
+              <Flex direction={['column', 'row']}>
+                {options.map((option) => option)}
+              </Flex>
             )
           }
         })}
       </Flex>
-    )
-  }
-
-  const Confetti = () => {
-    return (
-      <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
     )
   }
 
@@ -157,9 +151,9 @@ const Carousel = ({ slides }) => {
   return (
     <Box>
       <Wrapper>
-        <Flex w="full" p={10} alignItems="center" justifyContent="center">
+        <Flex w="full" p={[3, 10]} alignItems="center" justifyContent="center">
           <Flex w="full" overflow="hidden" pos="relative">
-            <Flex h="60vh" w="full" {...carouselStyle}>
+            <Flex h={['15vh', '60vh']} w="full" {...carouselStyle}>
               {slides.map((slide, sid) => (
                 <Box key={`slide-${sid}`} boxSize="full" flex="none">
                   <Text
@@ -172,7 +166,7 @@ const Carousel = ({ slides }) => {
                     {sid + 1} / {slidesCount}
                   </Text>
                   <Center h="100%">
-                    <Box w={[150, 500]}>
+                    <Box w={[180, 500]}>
                       <GuessWho
                         guessImage={slide.guessImage}
                         actualImage={slide.actualImage}
@@ -192,7 +186,9 @@ const Carousel = ({ slides }) => {
           </Flex>
         </Flex>
         <Choices />
-        <Confetti />
+        <ConfettiWrapper>
+          <Confetti active={fireConfetti} config={config} />
+        </ConfettiWrapper>
       </Wrapper>
     </Box>
   )
