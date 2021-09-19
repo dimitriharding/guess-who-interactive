@@ -37,6 +37,7 @@ import Result from '../components/ui/Result'
 import LeftPanel from '../components/Editor/LeftPanel'
 import SharePanel from '../components/Editor/SharePanel'
 import { title } from 'process'
+import Account from '../components/Account'
 
 export default function Editor() {
   const [removingBackground, setRemovingBackground] = useState(false)
@@ -47,9 +48,10 @@ export default function Editor() {
   const [guessOptions, setGuessOptions] = useState({})
   const [showAlert, setShowAlert] = useState(false)
   const [errorAlert, setErrorAlert] = useState(true)
-  const [completed, setCompleted] = useState(false)
+  const [completed, setCompleted] = useState(true)
   const [opacityState, setOpacityState] = useState('')
   const [deckData, setDeckData] = useState(null)
+  const [accountModal, setAccountModal] = useState(false)
   const onDrop = useCallback(
     (acceptedFiles) => {
       // Do something with the files
@@ -113,6 +115,7 @@ export default function Editor() {
         JSON.stringify(finalGuessOptions)
       )
       const response = await createGuessOptions(finalGuessOptions)
+      localStorage.setItem('gw:deckId', deckId)
       setCompleted(true)
     } catch (error) {
       setErrorAlert(true)
@@ -466,7 +469,11 @@ export default function Editor() {
                     >
                       <Button>Go to Deck</Button>
                     </Link>,
-                    <Button variant="ghost" key="account-button-2">
+                    <Button
+                      onClick={() => setAccountModal(true)}
+                      variant="ghost"
+                      key="account-button-2"
+                    >
                       {' '}
                       Create an Account{' '}
                     </Button>,
@@ -485,6 +492,11 @@ export default function Editor() {
           </GridItem>
         </SimpleGrid>
       </Box>
+      <Account
+        isOpen={accountModal}
+        onOpen={() => setAccountModal(true)}
+        onClose={() => setAccountModal(false)}
+      />
     </Box>
   )
 }

@@ -23,7 +23,8 @@
     "src/components/sections/home/Header.js",
     "src/util/util.js",
     "src/util/util.js",
-    "src/components/Confetti.jsx"
+    "src/components/Confetti.jsx",
+    "src/components/Account/validate.js"
   ],
   "exclude": ["node_modules"]
 }

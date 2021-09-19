@@ -128,3 +128,32 @@ export const uploadImage = async ({ file, deckId, noBg = false }) => {
     return ''
   }
 }
+
+export const signInWithGoogle = async () => {
+  const { user, session, error } = await supabase.auth.signIn({
+    provider: 'google',
+  })
+  return { user, session, error }
+}
+
+export const signUpWithEmail = async ({ email, password }) => {
+  const { user, session, error } = await supabase.auth.signUp({
+    provider: 'email',
+    email,
+    password,
+  })
+  return { user, session, error }
+}
+
+export const singInWithEmail = async ({ email, password }) => {
+  const { user, session, error } = await supabase.auth.signIn({
+    email,
+    password,
+  })
+  return { user, session, error }
+}
+
+export const getUser = async () => {
+  const user = supabase.auth.user()
+  return user
+}

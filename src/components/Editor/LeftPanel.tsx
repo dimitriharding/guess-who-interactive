@@ -24,7 +24,9 @@ const LeftPanel = () => {
         <br />
         <br />
         - Remove backgrounds
-        <br />- Mask images with black
+        <br />
+        - Mask images with black
+        <br />- Create guess options from list of names
       </Text>
       <Box p={5}>
         <Divider />
