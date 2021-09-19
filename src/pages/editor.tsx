@@ -138,7 +138,6 @@ export default function Editor() {
         guessOptions[key]?.answer &&
         guessOptions[key]?.options?.split(',')?.length === 4
     )
-    console.log({ optionAnswers })
     return uploadedFiles.length === optionAnswers.length
   }
 
