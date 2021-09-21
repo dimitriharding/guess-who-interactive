@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Flex, useColorModeValue, Text, Center } from '@chakra-ui/react'
+import {
+  Box,
+  Flex,
+  useColorModeValue,
+  Text,
+  Center,
+  Button,
+} from '@chakra-ui/react'
 import GuessWho from './GuessWho'
 import Confetti from 'react-dom-confetti'
+import Result from './Result'
+import SharePanel from '../Editor/SharePanel'
+import Link from 'next/link'
 
 const config = {
   angle: 90,
@@ -15,24 +25,27 @@ const config = {
   height: '10px',
   perspective: '500px',
   colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'],
-} as any
+}
+
+const Wrapper = (props) => <div style={{ position: 'relative' }} {...props} />
 
 const ConfettiWrapper = (props) => (
   <div
     style={{
       position: 'absolute',
+      left: '50%',
       top: '50%',
-      right: '50%',
     }}
     {...props}
   />
 )
 
-const Carousel = ({ slides }) => {
+const Carousel = ({ slides, title, description }) => {
   const [fireConfetti, setFireConfetti] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [position, setPosition] = useState(0)
-
+  const [completed, setCompleted] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
   const slidesCount = slides.length
 
   const prevSlide = () => {
@@ -41,7 +54,10 @@ const Carousel = ({ slides }) => {
   }
   const nextSlide = () => {
     setPosition(0)
-    setCurrentSlide((s) => (s === slidesCount - 1 ? 0 : s + 1))
+    setCurrentSlide((s) => {
+      if (s === slidesCount - 1) setCompleted(true)
+      return s === slidesCount - 1 ? 0 : s + 1
+    })
   }
 
   const arrowStyles = {
@@ -71,33 +87,11 @@ const Carousel = ({ slides }) => {
     }
   }
 
-  const Wrapper = (props) => <div style={{ position: 'relative' }} {...props} />
-
-  const shuffle = (array) => {
-    let currentIndex = array.length,
-      randomIndex
-
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-      // Pick a remaining element...
-      randomIndex = Math.floor(Math.random() * currentIndex)
-      currentIndex--
-
-      // And swap it with the current element.
-      ;[array[currentIndex], array[randomIndex]] = [
-        array[randomIndex],
-        array[currentIndex],
-      ]
-    }
-
-    return array
-  }
-
   const Choices = () => {
     return (
       <Flex w="full" p={10} alignItems="center" justifyContent="center">
         {slides?.map((slide, sid) => {
-          if (currentSlide === sid) {
+          if (currentSlide === sid && !slide?.end) {
             const options = [
               <button
                 key="choice-1"
@@ -145,7 +139,7 @@ const Carousel = ({ slides }) => {
   }
 
   useEffect(() => {
-    console.log('working')
+    setShareUrl(window.location.href)
   }, [])
 
   return (
@@ -153,36 +147,74 @@ const Carousel = ({ slides }) => {
       <Wrapper>
         <Flex w="full" p={[3, 10]} alignItems="center" justifyContent="center">
           <Flex w="full" overflow="hidden" pos="relative">
-            <Flex h={['15vh', '60vh']} w="full" {...carouselStyle}>
-              {slides.map((slide, sid) => (
-                <Box key={`slide-${sid}`} boxSize="full" flex="none">
-                  <Text
-                    color="white"
-                    fontSize="xs"
-                    p="8px 12px"
-                    pos="absolute"
-                    top="0"
-                  >
-                    {sid + 1} / {slidesCount}
-                  </Text>
-                  <Center h="100%">
-                    <Box w={[180, 500]}>
-                      <GuessWho
-                        guessImage={slide.guessImage}
-                        actualImage={slide.actualImage}
-                        position={position}
-                      />
+            {!(currentSlide === slidesCount - 1) ? (
+              <Flex h={['15vh', '60vh']} w="full" {...carouselStyle}>
+                {slides.map((slide, sid) => {
+                  return (
+                    <Box key={`slide-${sid}`} boxSize="full" flex="none">
+                      <Text
+                        color="white"
+                        fontSize="xs"
+                        p="8px 12px"
+                        pos="absolute"
+                        top="0"
+                      >
+                        {sid + 1} / {slidesCount}
+                      </Text>
+                      <Center h="100%">
+                        <Box w={[180, 500]}>
+                          <GuessWho
+                            guessImage={slide.guessImage}
+                            actualImage={slide.actualImage}
+                            position={position}
+                          />
+                        </Box>
+                      </Center>
                     </Box>
-                  </Center>
-                </Box>
-              ))}
-            </Flex>
-            <Text {...arrowStyles} left="0" onClick={prevSlide}>
-              &#10094;
-            </Text>
-            <Text {...arrowStyles} right="0" onClick={nextSlide}>
-              &#10095;
-            </Text>
+                  )
+                })}
+              </Flex>
+            ) : (
+              <Box boxSize="full">
+                <Center flexDirection="column">
+                  <Result
+                    title="Congrats, you made it to the end!"
+                    subTitle="You can now share with friends & family or create a deck!"
+                    status="success"
+                    extra={[
+                      <Link key="deck-cta-1" href="/editor">
+                        <Button colorScheme="teal">Create a Deck</Button>
+                      </Link>,
+                      <Button
+                        variant="outline"
+                        key="deck-cta-2"
+                        onClick={() => {
+                          setCurrentSlide(0)
+                          setCompleted(false)
+                        }}
+                      >
+                        Play Again
+                      </Button>,
+                    ]}
+                  />
+                  <br />
+                  <SharePanel
+                    title={`You have been invited to play a round of whoDat! \n\n${title} \n ${description} \n\n`}
+                    shareUrl={shareUrl}
+                  />
+                </Center>
+              </Box>
+            )}
+            {completed && currentSlide !== slidesCount - 1 && (
+              <Text {...arrowStyles} left="0" onClick={prevSlide}>
+                &#10094;
+              </Text>
+            )}
+            {currentSlide !== slidesCount - 1 && (
+              <Text {...arrowStyles} right="0" onClick={nextSlide}>
+                &#10095;
+              </Text>
+            )}
           </Flex>
         </Flex>
         <Choices />

@@ -15,6 +15,8 @@ const Deck = ({ data, error }) => {
           </Box>
           <Carousel
             slides={data?.pageData?.slides ? data?.pageData?.slides : []}
+            title={data?.pageData?.title}
+            description={data?.pageData?.about}
           />
         </>
       )
@@ -78,7 +80,14 @@ export async function getServerSideProps({ params }) {
     }
   }
 
-  console.log({ errorData })
+  if (deckData) {
+    deckData.pageData.slides.push({
+      guessImage: null,
+      actualImage: null,
+      options: null,
+      end: true,
+    })
+  }
   return {
     props: { data: deckData, error: errorData },
   }

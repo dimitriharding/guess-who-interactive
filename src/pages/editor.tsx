@@ -29,7 +29,13 @@ import {
 } from '@chakra-ui/react'
 import { useDropzone } from 'react-dropzone'
 import ImageCard from '../components/ui/ImageCard'
-import { createUserId, removeBackground, uploadImage } from '../util/util'
+import {
+  createUserId,
+  removeBackground,
+  uploadImage,
+  transformFiles,
+  createFilesFromLocalStorage,
+} from '../util/util'
 import { createAnonUser } from '../util/API/user'
 import { createDeck } from '../util/API/deck'
 import { createGuessOptions } from '../util/API/guess-options'
@@ -48,20 +54,22 @@ export default function Editor() {
   const [guessOptions, setGuessOptions] = useState({})
   const [showAlert, setShowAlert] = useState(false)
   const [errorAlert, setErrorAlert] = useState(true)
-  const [completed, setCompleted] = useState(true)
+  const [completed, setCompleted] = useState(false)
   const [opacityState, setOpacityState] = useState('')
   const [deckData, setDeckData] = useState(null)
   const [accountModal, setAccountModal] = useState(false)
   const onDrop = useCallback(
-    (acceptedFiles) => {
+    async function (acceptedFiles) {
       // Do something with the files
-      const arrSet = [...uploadedFiles, ...acceptedFiles]
+      let arrSet = [...uploadedFiles, ...acceptedFiles]
       if (arrSet[5] !== undefined) {
         setShowAlert(true)
-        const newFiles = arrSet.splice(0, 5)
+        let newFiles = arrSet.splice(0, 5)
+        newFiles = await transformFiles(newFiles)
         setUploadFiles([...newFiles])
       } else {
         setShowAlert(false)
+        arrSet = await transformFiles(arrSet)
         setUploadFiles([...arrSet])
       }
     },
@@ -146,7 +154,8 @@ export default function Editor() {
 
   useEffect(() => {
     // check if user exist, if not create in database
-    const userId = window.localStorage.getItem('gw:UserId')
+    const userId = localStorage.getItem('gw:UserId')
+    const localFiles = localStorage.getItem('gw:UploadedFiles')
     if (userId) {
       //  user exist
       setCurrentUserId(userId)
@@ -155,12 +164,17 @@ export default function Editor() {
       const userId = createUserId()
       createAnonUser(userId)
         .then(() => {
-          window.localStorage.setItem('gw:UserId', userId)
+          localStorage.setItem('gw:UserId', userId)
           setCurrentUserId(userId)
         })
         .catch((error) => {
           console.log({ error })
         })
+    }
+
+    if (localFiles) {
+      const cachedFiles = createFilesFromLocalStorage(localFiles)
+      setUploadFiles([...cachedFiles])
     }
   }, [])
 
@@ -238,10 +252,10 @@ export default function Editor() {
                       <Alert status="error">
                         <AlertIcon onClick={() => setShowAlert(false)} />
                         <AlertTitle mr={2}>
-                          Your selection was more than 10!
+                          Your selection was more than 5!
                         </AlertTitle>
                         <AlertDescription>
-                          If you would like to create a deck with more than 10
+                          If you would like to create a deck with more than 5
                           images, you can buy credit to increase the limit.
                         </AlertDescription>
                         <CloseButton
@@ -363,12 +377,13 @@ export default function Editor() {
                         <ImageCard
                           id={index}
                           name={file.name}
-                          url={URL.createObjectURL(file)}
+                          url={file.url}
                           size={file.size}
-                          onRemove={(id) => {
-                            const newList = uploadedFiles.filter(
-                              (_, index) => index !== id
+                          onRemove={async (id) => {
+                            const newList = await transformFiles(
+                              uploadedFiles.filter((_, index) => index !== id)
                             )
+
                             setUploadFiles([...newList])
                           }}
                         />

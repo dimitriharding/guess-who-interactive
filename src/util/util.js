@@ -157,3 +157,40 @@ export const getUser = async () => {
   const user = supabase.auth.user()
   return user
 }
+
+export const transformFiles = async (files) => {
+  function getBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
+  const filesUrl = await Promise.all(
+    files.map(async (file) => {
+      if (!file?.fileName) {
+        file['url'] = await getBase64(file)
+        file['fileName'] = file.name
+        file['fileType'] = file.type
+      }
+
+      return file
+    })
+  )
+  window.localStorage.setItem('gw:UploadedFiles', JSON.stringify(filesUrl))
+  return filesUrl
+}
+
+export const createFilesFromLocalStorage = (_localFiles) => {
+  const localFiles = JSON.parse(_localFiles)
+  const files = localFiles.map((fileData) => {
+    const file = new File([fileData?.url], fileData?.fileName, {
+      type: file?.fileType,
+    })
+    file['url'] = fileData.url
+    return file
+  })
+  return files
+}
