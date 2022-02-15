@@ -81,7 +81,7 @@ const Carousel = ({ slides, title, description }) => {
 
   const handleSelection = (option) => {
     if (option.answer) {
-      setPosition(100)
+      setPosition(1)
       setFireConfetti(true)
       setTimeout(() => setFireConfetti(false), 3000)
     }
@@ -167,6 +167,7 @@ const Carousel = ({ slides, title, description }) => {
                             guessImage={slide.guessImage}
                             actualImage={slide.actualImage}
                             position={position}
+                            key={`slide-${sid}-${position}`}
                           />
                         </Box>
                       </Center>
