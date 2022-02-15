@@ -62,9 +62,9 @@ export default function Editor() {
     async function (acceptedFiles) {
       // Do something with the files
       let arrSet = [...uploadedFiles, ...acceptedFiles]
-      if (arrSet[5] !== undefined) {
+      if (arrSet[10] !== undefined) {
         setShowAlert(true)
-        let newFiles = arrSet.splice(0, 5)
+        let newFiles = arrSet.splice(0, 10)
         newFiles = await transformFiles(newFiles)
         setUploadFiles([...newFiles])
       } else {
@@ -252,10 +252,10 @@ export default function Editor() {
                       <Alert status="error">
                         <AlertIcon onClick={() => setShowAlert(false)} />
                         <AlertTitle mr={2}>
-                          Your selection was more than 5!
+                          Your selection was more than 10!
                         </AlertTitle>
                         <AlertDescription>
-                          If you would like to create a deck with more than 5
+                          If you would like to create a deck with more than 10
                           images, you can buy credit to increase the limit.
                         </AlertDescription>
                         <CloseButton
@@ -289,7 +289,7 @@ export default function Editor() {
                       fontWeight="md"
                       color={useColorModeValue('gray.700', 'gray.50')}
                     >
-                      {`Add your images (${uploadedFiles.length}/5)`}
+                      {`Add your images (${uploadedFiles.length}/10)`}
                     </FormLabel>
                     <div {...getRootProps()}>
                       <VisuallyHidden>
